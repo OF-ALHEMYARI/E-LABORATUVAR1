@@ -6,7 +6,7 @@ export default function TabOneScreen() {
       <Text style={styles.title}>Tab One</Text>
       <View style={styles.separator} />
     </View>
-  );
+  ); 
 }
 
 const styles = StyleSheet.create({
