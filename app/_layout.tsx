@@ -53,6 +53,7 @@ function RootLayoutNav() {
     <GluestackUIProvider mode="light">
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="tests/[id]" options={{ headerShown: true, title: "Test Details" }} />
       </Stack>
     </GluestackUIProvider>
   );
