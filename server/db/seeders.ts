@@ -18,10 +18,7 @@ export const seedDatabase = () => {
         (4, 2, 'IgA', '2023-02-01', '8'),  -- منخفض
         (5, 2, 'IgM', '2023-02-02', '30'), -- مرتفع
         (6, 2, 'IgG', '2023-02-03', '19')  -- منخفض
-        (7, 2, 'IgA', '2023-02-04', '15'), -- طبيعي
-        (8, 2, 'IgM', '2023-02-05', '20'), -- طبيعي
-        (9, 2, 'IgG', '2023-02-06', '25')
-        (10, 2, 'IgA', '2023-02-07', '17'), -- طبيعي
+
       `);
 
     // إدخال القيم المرجعية
@@ -39,6 +36,55 @@ export const seedDatabase = () => {
         (2, 'IgM Guide', 15, 25),
         (3, 'IgG Guide', 20, 30)
       `);
+
+    // إدخال البيانات المرجعية من Turk Med SCI
+    const turkMedSciReferences = [
+      // IgA references
+      { guide: 'Turk Med SCI', min_age: 0, max_age: 3, age_unit: 'months', test_type: 'IgA', min_value: 0.0, max_value: 0.5, unit: 'g/L' },
+      { guide: 'Turk Med SCI', min_age: 4, max_age: 6, age_unit: 'months', test_type: 'IgA', min_value: 0.1, max_value: 0.7, unit: 'g/L' },
+      { guide: 'Turk Med SCI', min_age: 7, max_age: 12, age_unit: 'months', test_type: 'IgA', min_value: 0.2, max_value: 1.0, unit: 'g/L' },
+      { guide: 'Turk Med SCI', min_age: 1, max_age: 2, age_unit: 'years', test_type: 'IgA', min_value: 0.3, max_value: 1.2, unit: 'g/L' },
+      { guide: 'Turk Med SCI', min_age: 2, max_age: 3, age_unit: 'years', test_type: 'IgA', min_value: 0.4, max_value: 1.6, unit: 'g/L' },
+      { guide: 'Turk Med SCI', min_age: 3, max_age: 6, age_unit: 'years', test_type: 'IgA', min_value: 0.5, max_value: 2.0, unit: 'g/L' },
+      
+      // IgM references
+      { guide: 'Turk Med SCI', min_age: 0, max_age: 3, age_unit: 'months', test_type: 'IgM', min_value: 0.1, max_value: 0.6, unit: 'g/L' },
+      { guide: 'Turk Med SCI', min_age: 4, max_age: 6, age_unit: 'months', test_type: 'IgM', min_value: 0.2, max_value: 0.8, unit: 'g/L' },
+      { guide: 'Turk Med SCI', min_age: 7, max_age: 12, age_unit: 'months', test_type: 'IgM', min_value: 0.3, max_value: 1.0, unit: 'g/L' },
+      { guide: 'Turk Med SCI', min_age: 1, max_age: 2, age_unit: 'years', test_type: 'IgM', min_value: 0.4, max_value: 1.4, unit: 'g/L' },
+      { guide: 'Turk Med SCI', min_age: 2, max_age: 3, age_unit: 'years', test_type: 'IgM', min_value: 0.5, max_value: 1.8, unit: 'g/L' },
+      { guide: 'Turk Med SCI', min_age: 3, max_age: 6, age_unit: 'years', test_type: 'IgM', min_value: 0.5, max_value: 2.0, unit: 'g/L' }
+    ];
+
+    // إدخال البيانات المرجعية من Turkish Journal Pediatrics
+    const turkishJPedReferences = [
+      // IgG1 references
+      { guide: 'Turkish Journal Pediatrics', min_age: 0, max_age: 3, age_unit: 'months', test_type: 'IgG1', min_value: 2.4, max_value: 10.6, unit: 'g/L' },
+      { guide: 'Turkish Journal Pediatrics', min_age: 4, max_age: 6, age_unit: 'months', test_type: 'IgG1', min_value: 1.8, max_value: 7.0, unit: 'g/L' },
+      { guide: 'Turkish Journal Pediatrics', min_age: 7, max_age: 12, age_unit: 'months', test_type: 'IgG1', min_value: 2.0, max_value: 7.7, unit: 'g/L' },
+      
+      // IgG2 references
+      { guide: 'Turkish Journal Pediatrics', min_age: 0, max_age: 3, age_unit: 'months', test_type: 'IgG2', min_value: 1.1, max_value: 4.9, unit: 'g/L' },
+      { guide: 'Turkish Journal Pediatrics', min_age: 4, max_age: 6, age_unit: 'months', test_type: 'IgG2', min_value: 0.8, max_value: 3.5, unit: 'g/L' },
+      { guide: 'Turkish Journal Pediatrics', min_age: 7, max_age: 12, age_unit: 'months', test_type: 'IgG2', min_value: 0.9, max_value: 4.1, unit: 'g/L' }
+    ];
+
+    // إدخال البيانات في قاعدة البيانات
+    const insertReference = db.prepare(`
+      INSERT INTO age_references (
+        guide_name, min_age, max_age, age_unit, 
+        test_type, min_value, max_value, unit
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    [...turkMedSciReferences, ...turkishJPedReferences].forEach(ref => {
+      insertReference.run([
+        ref.guide, ref.min_age, ref.max_age, ref.age_unit,
+        ref.test_type, ref.min_value, ref.max_value, ref.unit
+      ]);
+    });
+
+    insertReference.finalize();
 
     console.log("Database seeded successfully with extended test cases!");
   });

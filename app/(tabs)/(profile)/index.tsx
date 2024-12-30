@@ -6,7 +6,6 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar";
 import { Button, ButtonText } from "@/components/ui/button";
-import { FormControl } from "@/components/ui/form-control";
 import { HStack } from "@/components/ui/hstack";
 import { Image } from "@/components/ui/image";
 import { VStack } from "@/components/ui/vstack";

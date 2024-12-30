@@ -1,11 +1,11 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import "@/global.css";
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
+import "@/global.css";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -14,7 +14,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: "(tabs)",
+  initialRouteName: "auth/login",
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -42,18 +42,22 @@ export default function RootLayout() {
   }
 
   return (
-    <GluestackUIProvider mode="light">
-      <RootLayoutNav />
-    </GluestackUIProvider>
-  );
-}
-
-function RootLayoutNav() {
-  return (
-    <GluestackUIProvider mode="light">
+    <GluestackUIProvider mode="system">
       <Stack>
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="tests/[id]" options={{ headerShown: true, title: "Test Details" }} />
+        <Stack.Screen name="admin" options={{ headerShown: false }} />
+        <Stack.Screen 
+          name="tests/[id]" 
+          options={{ 
+            headerShown: true, 
+            title: "Test Details",
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: '#000',
+          }} 
+        />
       </Stack>
     </GluestackUIProvider>
   );

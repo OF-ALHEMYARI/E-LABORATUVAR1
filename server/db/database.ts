@@ -74,3 +74,62 @@ export const getComparison = (patientId: string) => {
     );
   });
 };
+
+export const getReferenceRangeByAge = (
+  testType: string,
+  ageInMonths: number,
+  guideName: string
+): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    const sql = `
+      SELECT * FROM age_references 
+      WHERE test_type = ? 
+      AND guide_name =?
+      AND (
+        (age_unit = 'months' AND ? >= min_age AND ? <= max_age)
+        OR 
+        (age_unit = 'years' AND ? >= min_age * 12 AND ? <= max_age * 12)
+      )
+    `;
+    
+    db.get(sql, [testType, guideName, ageInMonths, ageInMonths, ageInMonths, ageInMonths], (err, row) => {
+      if (err) reject(err);
+      resolve(row);
+    });
+  });
+};
+
+export const analyzeTestResult = async (
+  testType: string,
+  value: number,
+  birthDate: string,
+  testDate: string,
+  guideName: string
+): Promise<{ status: 'low' | 'normal' | 'high', reference: any }> => {
+  // حساب العمر بالأشهر
+  const birthDateObj = new Date(birthDate);
+  const testDateObj = new Date(testDate);
+  const ageInMonths = 
+    (testDateObj.getFullYear() - birthDateObj.getFullYear()) * 12 +
+    (testDateObj.getMonth() - birthDateObj.getMonth());
+
+  // الحصول على النطاق المرجعي
+  const reference = await getReferenceRangeByAge(testType, ageInMonths, guideName);
+  
+  if (!reference) {
+    throw new Error('No reference range found for this age and test type');
+  }
+
+  // تحليل النتيجة
+  let status: 'low' | 'normal' | 'high';
+  if (value < reference.min_value) {
+    status = 'low';
+  } else if (value > reference.max_value) {
+    status = 'high';
+  } else {
+    status = 'normal';
+  }
+
+  return { status, reference };
+};
+
