@@ -1,27 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
-import { TextInput, Button, Text, HelperText, Card, Title, Divider } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getAgeGroup } from '../constants/referenceRanges';
+import React, { useState, useEffect } from "react";
+import { View, ScrollView, StyleSheet } from "react-native";
+import {
+  TextInput,
+  Button,
+  Text,
+  HelperText,
+  Card,
+  Title,
+  Divider,
+} from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAgeGroup } from "../constants/referenceRanges";
+import { firebaseAuthService } from "../services/firebaseAuthService";
 
 const PatientForm = ({ navigation }) => {
   const [formData, setFormData] = useState({
-    patientId: '',
-    firstName: '',
-    lastName: '',
-    dateOfBirth: '',
-    gender: '',
-    contactNumber: '',
-    email: '',
-    address: '',
-    medicalHistory: '',
-    currentMedications: '',
-    allergies: '',
+    patientId: "",
+    firstName: "",
+    lastName: "",
+    dateOfBirth: "",
+    gender: "",
+    contactNumber: "",
+    email: "",
+    address: "",
+    medicalHistory: "",
+    currentMedications: "",
+    allergies: "",
     emergencyContact: {
-      name: '',
-      relationship: '',
-      phone: ''
-    }
+      name: "",
+      relationship: "",
+      phone: "",
+    },
   });
 
   const [errors, setErrors] = useState({});
@@ -29,31 +38,40 @@ const PatientForm = ({ navigation }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     // Required fields
-    if (!formData.patientId.trim()) newErrors.patientId = 'Patient ID is required';
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.dateOfBirth.trim()) newErrors.dateOfBirth = 'Date of birth is required';
-    
+    if (!formData.patientId.trim())
+      newErrors.patientId = "Patient ID is required";
+    if (!formData.firstName.trim())
+      newErrors.firstName = "First name is required";
+    if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!formData.dateOfBirth.trim())
+      newErrors.dateOfBirth = "Date of birth is required";
+
     // Date of birth validation
     const dobPattern = /^\d{4}-\d{2}-\d{2}$/;
     if (formData.dateOfBirth && !dobPattern.test(formData.dateOfBirth)) {
-      newErrors.dateOfBirth = 'Use format YYYY-MM-DD';
+      newErrors.dateOfBirth = "Use format YYYY-MM-DD";
     }
 
     // Contact validation
-    if (formData.contactNumber && !/^\+?[\d\s-]{10,}$/.test(formData.contactNumber)) {
-      newErrors.contactNumber = 'Invalid phone number';
+    if (
+      formData.contactNumber &&
+      !/^\+?[\d\s-]{10,}$/.test(formData.contactNumber)
+    ) {
+      newErrors.contactNumber = "Invalid phone number";
     }
 
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Invalid email address';
+      newErrors.email = "Invalid email address";
     }
 
     // Emergency contact validation
-    if (formData.emergencyContact.phone && !/^\+?[\d\s-]{10,}$/.test(formData.emergencyContact.phone)) {
-      newErrors.emergencyContactPhone = 'Invalid emergency contact number';
+    if (
+      formData.emergencyContact.phone &&
+      !/^\+?[\d\s-]{10,}$/.test(formData.emergencyContact.phone)
+    ) {
+      newErrors.emergencyContactPhone = "Invalid emergency contact number";
     }
 
     setErrors(newErrors);
@@ -65,11 +83,14 @@ const PatientForm = ({ navigation }) => {
     const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
       age--;
     }
-    
+
     return age;
   };
 
@@ -80,7 +101,7 @@ const PatientForm = ({ navigation }) => {
     try {
       const age = calculateAge(formData.dateOfBirth);
       const ageGroup = getAgeGroup(age);
-      
+
       const patientData = {
         ...formData,
         age,
@@ -89,48 +110,61 @@ const PatientForm = ({ navigation }) => {
       };
 
       // Get existing patients
-      const existingData = await AsyncStorage.getItem('patients');
+      const existingData = await AsyncStorage.getItem("patients");
       const patients = existingData ? JSON.parse(existingData) : [];
 
+      console.log("patients:", patients);
       // Check for duplicate patient ID
-      if (patients.some(p => p.patientId === patientData.patientId)) {
-        setErrors({ patientId: 'Patient ID already exists' });
+      if (patients.some((p) => p.patientId === patientData.patientId)) {
+        setErrors({ patientId: "Patient ID already exists" });
         setLoading(false);
         return;
       }
 
       // Add new patient
       patients.push(patientData);
-      await AsyncStorage.setItem('patients', JSON.stringify(patients));
+      await AsyncStorage.setItem("patients", JSON.stringify(patients));
 
       // Clear form
       setFormData({
-        patientId: '',
-        firstName: '',
-        lastName: '',
-        dateOfBirth: '',
-        gender: '',
-        contactNumber: '',
-        email: '',
-        address: '',
-        medicalHistory: '',
-        currentMedications: '',
-        allergies: '',
+        patientId: "",
+        firstName: "",
+        lastName: "",
+        dateOfBirth: "",
+        gender: "",
+        contactNumber: "",
+        email: "",
+        address: "",
+        medicalHistory: "",
+        currentMedications: "",
+        allergies: "",
         emergencyContact: {
-          name: '',
-          relationship: '',
-          phone: ''
-        }
+          name: "",
+          relationship: "",
+          phone: "",
+        },
       });
-      
-      navigation.navigate('CombinedResultsSearch');
+
+      navigation.navigate("CombinedResultsSearch");
     } catch (error) {
-      console.error('Error saving patient:', error);
-      setErrors({ submit: 'Failed to save patient data' });
+      console.error("Error saving patient:", error);
+      setErrors({ submit: "Failed to save patient data" });
     } finally {
       setLoading(false);
     }
   };
+  function logout() {
+    try {
+      setLoading(true);
+      firebaseAuthService.logoutUser();
+      navigation.replace("Login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -142,7 +176,9 @@ const PatientForm = ({ navigation }) => {
           <TextInput
             label="Patient ID *"
             value={formData.patientId}
-            onChangeText={(text) => setFormData({ ...formData, patientId: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, patientId: text })
+            }
             error={!!errors.patientId}
             style={styles.input}
           />
@@ -153,7 +189,9 @@ const PatientForm = ({ navigation }) => {
           <TextInput
             label="First Name *"
             value={formData.firstName}
-            onChangeText={(text) => setFormData({ ...formData, firstName: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, firstName: text })
+            }
             error={!!errors.firstName}
             style={styles.input}
           />
@@ -164,7 +202,9 @@ const PatientForm = ({ navigation }) => {
           <TextInput
             label="Last Name *"
             value={formData.lastName}
-            onChangeText={(text) => setFormData({ ...formData, lastName: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, lastName: text })
+            }
             error={!!errors.lastName}
             style={styles.input}
           />
@@ -175,7 +215,9 @@ const PatientForm = ({ navigation }) => {
           <TextInput
             label="Date of Birth * (YYYY-MM-DD)"
             value={formData.dateOfBirth}
-            onChangeText={(text) => setFormData({ ...formData, dateOfBirth: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, dateOfBirth: text })
+            }
             error={!!errors.dateOfBirth}
             style={styles.input}
           />
@@ -200,7 +242,9 @@ const PatientForm = ({ navigation }) => {
           <TextInput
             label="Contact Number"
             value={formData.contactNumber}
-            onChangeText={(text) => setFormData({ ...formData, contactNumber: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, contactNumber: text })
+            }
             error={!!errors.contactNumber}
             style={styles.input}
           />
@@ -238,7 +282,9 @@ const PatientForm = ({ navigation }) => {
           <TextInput
             label="Medical History"
             value={formData.medicalHistory}
-            onChangeText={(text) => setFormData({ ...formData, medicalHistory: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, medicalHistory: text })
+            }
             multiline
             numberOfLines={4}
             style={styles.input}
@@ -247,7 +293,9 @@ const PatientForm = ({ navigation }) => {
           <TextInput
             label="Current Medications"
             value={formData.currentMedications}
-            onChangeText={(text) => setFormData({ ...formData, currentMedications: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, currentMedications: text })
+            }
             multiline
             numberOfLines={3}
             style={styles.input}
@@ -256,7 +304,9 @@ const PatientForm = ({ navigation }) => {
           <TextInput
             label="Allergies"
             value={formData.allergies}
-            onChangeText={(text) => setFormData({ ...formData, allergies: text })}
+            onChangeText={(text) =>
+              setFormData({ ...formData, allergies: text })
+            }
             multiline
             style={styles.input}
           />
@@ -274,7 +324,7 @@ const PatientForm = ({ navigation }) => {
             onChangeText={(text) =>
               setFormData({
                 ...formData,
-                emergencyContact: { ...formData.emergencyContact, name: text }
+                emergencyContact: { ...formData.emergencyContact, name: text },
               })
             }
             style={styles.input}
@@ -286,7 +336,10 @@ const PatientForm = ({ navigation }) => {
             onChangeText={(text) =>
               setFormData({
                 ...formData,
-                emergencyContact: { ...formData.emergencyContact, relationship: text }
+                emergencyContact: {
+                  ...formData.emergencyContact,
+                  relationship: text,
+                },
               })
             }
             style={styles.input}
@@ -298,7 +351,7 @@ const PatientForm = ({ navigation }) => {
             onChangeText={(text) =>
               setFormData({
                 ...formData,
-                emergencyContact: { ...formData.emergencyContact, phone: text }
+                emergencyContact: { ...formData.emergencyContact, phone: text },
               })
             }
             error={!!errors.emergencyContactPhone}
@@ -310,9 +363,7 @@ const PatientForm = ({ navigation }) => {
         </Card.Content>
       </Card>
 
-      {errors.submit && (
-        <Text style={styles.errorText}>{errors.submit}</Text>
-      )}
+      {errors.submit && <Text style={styles.errorText}>{errors.submit}</Text>}
 
       <Button
         mode="contained"
@@ -322,6 +373,16 @@ const PatientForm = ({ navigation }) => {
         style={styles.submitButton}
       >
         Save Patient
+      </Button>
+      <Button
+        mode="contained"
+        buttonColor="red"
+        onPress={logout}
+        loading={loading}
+        disabled={loading}
+        style={styles.submitButton}
+      >
+        Logout
       </Button>
     </ScrollView>
   );
@@ -342,9 +403,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   errorText: {
-    color: '#B00020',
+    color: "#B00020",
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   submitButton: {
     marginVertical: 16,

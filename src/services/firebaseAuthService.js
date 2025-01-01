@@ -7,29 +7,45 @@ import {
   updateEmail,
   updateProfile,
   sendEmailVerification,
-  deleteUser
-} from 'firebase/auth';
-import { auth } from '../config/firebaseConfig';
+  deleteUser,
+} from "firebase/auth";
+import { auth, db } from "../config/firebaseConfig";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 
 class FirebaseAuthService {
   // User Registration
   async registerUser(email, password, userData) {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       // Update user profile
       await updateProfile(user, {
         displayName: `${userData.firstName} ${userData.lastName}`,
-        photoURL: userData.photoURL || null
+        photoURL: userData.photoURL || null,
       });
 
-      // Send email verification
-      await sendEmailVerification(user);
-
+      const newUserData = {
+        ...userData,
+        uid: user.uid,
+      };
+      const userRef = await addDoc(collection(db, "users"), newUserData);
+      console.log(userRef.id);
       return user;
     } catch (error) {
-      console.error('Error registering user:', error);
+      console.error("Error registering user:", error);
       throw error;
     }
   }
@@ -37,10 +53,22 @@ class FirebaseAuthService {
   // User Login
   async loginUser(email, password) {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      return userCredential.user;
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const userCollection = collection(db, `users`);
+      const userQuery = query(
+        userCollection,
+        where("uid", "==", userCredential.user.uid)
+      );
+      const user = await getDocs(userQuery).then((querySnapshot) => {
+        return querySnapshot.docs[0];
+      });
+      return user.data();
     } catch (error) {
-      console.error('Error logging in:', error);
+      console.error("Error logging in:", error);
       throw error;
     }
   }
@@ -51,7 +79,7 @@ class FirebaseAuthService {
       await signOut(auth);
       return true;
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error("Error logging out:", error);
       throw error;
     }
   }
@@ -62,7 +90,7 @@ class FirebaseAuthService {
       await sendPasswordResetEmail(auth, email);
       return true;
     } catch (error) {
-      console.error('Error sending password reset:', error);
+      console.error("Error sending password reset:", error);
       throw error;
     }
   }
@@ -71,11 +99,11 @@ class FirebaseAuthService {
   async updateUserProfile(userData) {
     try {
       const user = auth.currentUser;
-      if (!user) throw new Error('No user logged in');
+      if (!user) throw new Error("No user logged in");
 
       await updateProfile(user, {
         displayName: userData.displayName,
-        photoURL: userData.photoURL
+        photoURL: userData.photoURL,
       });
 
       if (userData.email && userData.email !== user.email) {
@@ -89,7 +117,7 @@ class FirebaseAuthService {
 
       return true;
     } catch (error) {
-      console.error('Error updating user profile:', error);
+      console.error("Error updating user profile:", error);
       throw error;
     }
   }
@@ -98,12 +126,12 @@ class FirebaseAuthService {
   async deleteUserAccount() {
     try {
       const user = auth.currentUser;
-      if (!user) throw new Error('No user logged in');
+      if (!user) throw new Error("No user logged in");
 
       await deleteUser(user);
       return true;
     } catch (error) {
-      console.error('Error deleting user account:', error);
+      console.error("Error deleting user account:", error);
       throw error;
     }
   }
@@ -127,11 +155,11 @@ class FirebaseAuthService {
   async getUserToken() {
     try {
       const user = auth.currentUser;
-      if (!user) throw new Error('No user logged in');
+      if (!user) throw new Error("No user logged in");
 
       return await user.getIdToken();
     } catch (error) {
-      console.error('Error getting user token:', error);
+      console.error("Error getting user token:", error);
       throw error;
     }
   }
@@ -140,12 +168,12 @@ class FirebaseAuthService {
   async refreshUserToken() {
     try {
       const user = auth.currentUser;
-      if (!user) throw new Error('No user logged in');
+      if (!user) throw new Error("No user logged in");
 
       await user.getIdToken(true);
       return true;
     } catch (error) {
-      console.error('Error refreshing user token:', error);
+      console.error("Error refreshing user token:", error);
       throw error;
     }
   }
@@ -160,12 +188,12 @@ class FirebaseAuthService {
   async resendVerificationEmail() {
     try {
       const user = auth.currentUser;
-      if (!user) throw new Error('No user logged in');
+      if (!user) throw new Error("No user logged in");
 
       await sendEmailVerification(user);
       return true;
     } catch (error) {
-      console.error('Error resending verification email:', error);
+      console.error("Error resending verification email:", error);
       throw error;
     }
   }
